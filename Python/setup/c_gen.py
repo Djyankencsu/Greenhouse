@@ -4,6 +4,7 @@ os.chdir(os.path.dirname(__file__))
 params_dir = os.path.abspath("../../../params")+"/"
 main_path = os.path.join(params_dir,"main.txt")
 wifi_path = os.path.join(params_dir,"wifi.txt")
+arduino_path = os.path.join(params_dir,"arduino.txt")
 header_path = os.path.join(params_dir,"config.h")
 
 if os.path.exists(params_dir):
@@ -21,6 +22,11 @@ if os.path.exists(wifi_path):
 else:
     raise FileNotFoundError
 
+if os.path.exists(arduino_path):
+    print("Found Arduino parameter file.")
+else:
+    raise FileNotFoundError
+
 header_content = ""
 main_file = open(main_path)
 main_lines = [x for x in main_file.readlines() if "Key" in x]
@@ -35,6 +41,14 @@ wifi_lines = wifi_file.readlines()
 wifi_file.close()
 
 for each in wifi_lines:
+    holder = each.strip().split("=")
+    header_content += "#define " + holder[0].upper()+" \""+holder[1]+"\"\n"
+
+arduino_file = open(wifi_path)
+arduino_lines = wifi_file.readlines()
+arduino_file.close()
+
+for each in arduino_lines:
     holder = each.strip().split("=")
     header_content += "#define " + holder[0].upper()+" \""+holder[1]+"\"\n"
 
