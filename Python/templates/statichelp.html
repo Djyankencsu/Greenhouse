@@ -4,13 +4,20 @@
     <link rel="icon" href="static/favicon.png">
     <style>
         p {display: inline;}
+        h4 {
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <h1>Help Page</h1>
     <p>This page is designed to help you formulate a query URL by documenting the options available for </p>
     <p>various queries.</p><br>
-    <h5>Graph Page</h5>
+    <h4><a href="/{{Keys}}">Main Page</a></h4>
+    <p>Return to the main page</p>
+    <h4><a href="/graph{{Keys}}">Graph Page</a></h4>
+    <p style="line-height: 1.5em;"><strong>Permission required: Read</strong></p><br/>
     <p>On the graph page, you can set the arguments "Time" and "EndDate". The first one, Time, is the time period </p>
     <p>over which you want to graph data. If you want to graph the past week of data, then use "Time=1w". Valid abbreviations </p>
     <p>for time are h, d, and w, which stand for hour, day, and week respectively. Only one can be used at a time. 1d2h </p>
@@ -20,4 +27,11 @@
     <p>specified day. This query might look like "...EndDate=2023-08-04-23:59:00...". (Note: this is yyyy-mm-dd format.) </p>
     <p>In summary, example queries might look like "/?ReadKey=...&Time=8d&EndDate=2023-08-03-12:00:00" which would return </p>
     <p>a graph of the 8 days of data ending on August 3rd, 2023 at 12pm noon. </p>
+    <h4><a href="/image{{Keys}}">Image Page</a></h4>
+    <p style="line-height: 1.5em;"><strong>Permission required: Read</strong></p><br/>
+    <p>This page returns an image from a camera in the greenhouse, if the camera exists. </p>
+    <h4><a href="/write{{Keys}}">Write Page</a></h4>
+    <p style="line-height: 1.5em;"><strong>Permission required: Write</strong></p><br/>
+    <p>This page is the endpoint for write requests containing temperature data. Manually writing data is possible but rarely needed. </p>
+    <p>Therefore, this page has a separate access credential: the write key. </p>
 </body>

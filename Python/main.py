@@ -21,6 +21,7 @@ else:
 
 main_params = {}
 counter =0
+password_attempt =[datetime.datetime.now(),0]
 
 def read_params():
     global counter
@@ -48,14 +49,16 @@ def generate_plot(time_length, time_reference):
         dict_split = storage_dict.items()
         dict_split = sorted(dict_split)
         x,y = zip(*dict_split)
+        xtick_holder = np.linspace((time_reference-time_length).timestamp(),time_reference.timestamp(),7)
+        xtick_holder = [datetime.datetime.fromtimestamp(each) for each in xtick_holder]
         plt.rcParams["figure.figsize"] = (10,5)
         plt.plot(x,y,"bo-")
-        plt.plot(x,[42 for each in x],"r")
-        plt.xlabel("Time")
+        plt.plot(xtick_holder,[42 for each in xtick_holder],"r")
+        plt.xlabel("Timestamp")
         plt.ylabel("Temperature (˚F)")
         plt.yticks(np.linspace(0,120,13))
-        xtick_holder = np.linspace((time_reference-time_length).timestamp(),time_reference.timestamp(),7)
-        plt.xticks([datetime.datetime.fromtimestamp(each) for each in xtick_holder])
+        plt.xlim([xtick_holder[0],xtick_holder[-1]])
+        plt.xticks(xtick_holder)
         plt.savefig(os.path.join(os.path.abspath(os.path.dirname(__file__)),"static/graph.jpg"))
         plt.clf()
 
@@ -90,16 +93,34 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
+    global password_attempt
     arguments = request.args.to_dict()
     if ("WriteKey" in arguments.keys()) or ("ReadKey" in arguments.keys()):
         return render_template("options.html",Keys=preserve_arguments(arguments))
     elif (main_params["PWEnable"] == "True") and (arguments.get("password",None) in [None,""]):
         return render_template("pwlogin.html", ImagePath="static/login.png")
     elif (main_params["PWEnable"] == "True") and (arguments.get("password",None) != main_params["Password"]):
-        return render_template("pwlogin.html", ImagePath="static/failure.png")
+        if password_attempt[1]==0:
+            password_attempt[0] = datetime.datetime.now()
+            password_attempt[1] = 1
+            return render_template("pwlogin.html", ImagePath="static/failure.png")
+        elif password_attempt[1] < int(main_params["PasswordAttempts"]):
+            password_attempt[1] += 1
+            return render_template("pwlogin.html", ImagePath="static/failure.png")
+        elif password_attempt[0] < (datetime.datetime.now() - datetime.timedelta(seconds=float(main_params["PasswordTime"]))):
+            password_attempt = [datetime.datetime.now(),0]
+            return render_template("pwlogin.html", ImagePath="static/failure.png")
+        elif password_attempt[1] >= int(main_params["PasswordAttempts"]):
+            password_attempt[0] = datetime.datetime.now()
+            return render_template("locked.html",Time=main_params["PasswordTime"])
     elif (main_params["PWEnable"] == "True") and (arguments.get("password",None) == main_params["Password"]):
-        query_holder = "/?WriteKey"+"="+main_params["WriteKey"]+"&ReadKey"+"="+main_params["ReadKey"]
-        return redirect(query_holder)
+        if (password_attempt[1] >= int(main_params["PasswordAttempts"])) and (password_attempt[0] > (datetime.datetime.now() - datetime.timedelta(seconds=float(main_params["PasswordTime"])))):
+            password_attempt[0] = datetime.datetime.now()
+            return render_template("locked.html",Time=main_params["PasswordTime"])
+        else:
+            password_attempt = [datetime.datetime.now(),0]
+            query_holder = "/?ReadKey"+"="+main_params["ReadKey"]
+            return redirect(query_holder)
     elif (main_params["PWEnable"] == "False") and ("password" in arguments.keys()):
         return render_template("pwdisabled.html", message="Password login is currently disabled. Please enter access keys manually.")
     else:
@@ -108,7 +129,7 @@ def index():
 @app.route("/write")
 def write_data():
     arguments = request.args.to_dict()
-    if arguments["WriteKey"] == main_params["WriteKey"]:
+    if arguments.get("WriteKey") == main_params["WriteKey"]:
         data=request.args.get(main_params["Temp"])
         if data is not None:
             file = open(data_dir+main_params["TempFile"],"a")
@@ -118,7 +139,7 @@ def write_data():
         else:
             return render_template("writefail.html")
     else:
-        return redirect("/",preserve_arguments(arguments,False))
+        return redirect("/"+preserve_arguments(arguments,False))
 
 @app.route("/image")
 def show_img():
@@ -132,12 +153,12 @@ def show_img():
         counter += 1
         return render_template("image.html",**holder)
     else:
-        return redirect("/",preserve_arguments(arguments,False))
+        return redirect("/"+preserve_arguments(arguments,False))
     
 @app.route("/graph")
 def show_graph():
     arguments = request.args.to_dict()
-    if arguments["ReadKey"] == main_params["ReadKey"]:
+    if arguments.get("ReadKey") == main_params["ReadKey"]:
         oldest_point = datetime.timedelta(days=7)
         stop_point = datetime.datetime.now()
         if "Time" in arguments.keys():
@@ -148,11 +169,12 @@ def show_graph():
         holder = {"ImagePath":"static/graph.jpg"}
         return render_template("graph.html",**holder)
     else:
-        return redirect("/",preserve_arguments(arguments,False))
+        return redirect("/"+preserve_arguments(arguments,False))
 
 @app.route("/help")
 def show_help():
-    return render_template("statichelp.html")
+    arguments = request.args.to_dict()
+    return render_template("statichelp.html",Keys=preserve_arguments(arguments))
     
 if __name__ == '__main__':
     read_params()
