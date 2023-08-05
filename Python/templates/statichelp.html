@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<head>
+    <title>Greenhouse Monitor</title>
+    <link rel="icon" href="static/favicon.png">
+    <style>
+        p {display: inline;}
+    </style>
+</head>
+<body>
+    <h1>Help Page</h1>
+    <p>This page is designed to help you formulate a query URL by documenting the options available for </p>
+    <p>various queries.</p><br>
+    <h5>Graph Page</h5>
+    <p>On the graph page, you can set the arguments "Time" and "EndDate". The first one, Time, is the time period </p>
+    <p>over which you want to graph data. If you want to graph the past week of data, then use "Time=1w". Valid abbreviations </p>
+    <p>for time are h, d, and w, which stand for hour, day, and week respectively. Only one can be used at a time. 1d2h </p>
+    <p>would return an error, but 26h is a valid constuction. The EndDate option manually specifies when to reference this time </p>
+    <p>period to. For example, by default, the graph will return the last week of data relative to the current day and time, </p>
+    <p>but specifying a prior date without changing the Time parameter will cause it to return the week of data prior to the </p>
+    <p>specified day. This query might look like "...EndDate=2023-08-04-23:59:00...". (Note: this is yyyy-mm-dd format.) </p>
+    <p>In summary, example queries might look like "/?ReadKey=...&Time=8d&EndDate=2023-08-03-12:00:00" which would return </p>
+    <p>a graph of the 8 days of data ending on August 3rd, 2023 at 12pm noon. </p>
+</body>

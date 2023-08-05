@@ -75,6 +75,16 @@ def read_time_arg(input_string):
         return datetime.timedelta(days=holder_int)
     elif holder_char == "w":
         return datetime.timedelta(weeks=holder_int)
+    
+def preserve_arguments(arguments,keys=True):
+    query = "?"
+    for each in arguments.keys():
+        if (each in ["ReadKey","WriteKey"] and not keys):
+            pass
+        else:
+            query += each + "=" + arguments[each]+"&"
+    query = query[0:-1]
+    return query
 
 app = Flask(__name__)
 
@@ -82,11 +92,7 @@ app = Flask(__name__)
 def index():
     arguments = request.args.to_dict()
     if ("WriteKey" in arguments.keys()) or ("ReadKey" in arguments.keys()):
-        query = "?"
-        for each in arguments.keys():
-            query += each + "=" + arguments[each]+"&"
-        query = query[0:-1]
-        return render_template("options.html",Keys=query)
+        return render_template("options.html",Keys=preserve_arguments(arguments))
     elif (main_params["PWEnable"] == "True") and (arguments.get("password",None) in [None,""]):
         return render_template("pwlogin.html", ImagePath="static/login.png")
     elif (main_params["PWEnable"] == "True") and (arguments.get("password",None) != main_params["Password"]):
@@ -109,7 +115,10 @@ def write_data():
             file.write(datetime.datetime.now().strftime("%x-%X")+","+data+"\n")
             file.close()
             return render_template("writesuccess.html")
-    return render_template("index.html")
+        else:
+            return render_template("writefail.html")
+    else:
+        return redirect("/",preserve_arguments(arguments,False))
 
 @app.route("/image")
 def show_img():
@@ -122,6 +131,8 @@ def show_img():
         holder = {"ImagePath":"static/image.jpg"}
         counter += 1
         return render_template("image.html",**holder)
+    else:
+        return redirect("/",preserve_arguments(arguments,False))
     
 @app.route("/graph")
 def show_graph():
@@ -136,6 +147,12 @@ def show_graph():
         generate_plot(oldest_point,stop_point)
         holder = {"ImagePath":"static/graph.jpg"}
         return render_template("graph.html",**holder)
+    else:
+        return redirect("/",preserve_arguments(arguments,False))
+
+@app.route("/help")
+def show_help():
+    return render_template("statichelp.html")
     
 if __name__ == '__main__':
     read_params()
