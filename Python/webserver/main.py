@@ -10,9 +10,9 @@ import numpy as np
 
 os.chdir(os.path.dirname(__file__))
 
-if os.path.exists(os.path.abspath("../../data")) and os.path.exists(os.path.abspath("../../params")):
-    data_dir = os.path.abspath("../../data")+"/"
-    params_dir = os.path.abspath("../../params")+"/"
+if os.path.exists(os.path.abspath("../../../data")) and os.path.exists(os.path.abspath("../../../params")):
+    data_dir = os.path.abspath("../../../data")+"/"
+    params_dir = os.path.abspath("../../../params")+"/"
     print("Found Data and Parameter directories")
 else:
     print("Data or Parameter directories not found.")
