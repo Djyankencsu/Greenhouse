@@ -44,8 +44,8 @@ for each in wifi_lines:
     holder = each.strip().split("=")
     header_content += "#define " + holder[0].upper()+" \""+holder[1]+"\"\n"
 
-arduino_file = open(wifi_path)
-arduino_lines = wifi_file.readlines()
+arduino_file = open(arduino_path)
+arduino_lines = arduino_file.readlines()
 arduino_file.close()
 
 for each in arduino_lines:
