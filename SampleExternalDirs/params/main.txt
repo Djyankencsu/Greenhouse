@@ -1,0 +1,10 @@
+ReadKey=
+WriteKey=
+Password=LemmeInNow!
+PWEnable=True
+Temp=Temperature
+TempFile=temps.csv
+ImgNameLength=5
+CounterBase=1
+PasswordTime=60
+PasswordAttempts=10
