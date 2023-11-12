@@ -37,7 +37,7 @@ def read_params():
 
 def generate_plot(time_length, time_reference):
     if data_dir is not None:
-        file = open(data_dir + "temps.txt","r")
+        file = open(data_dir +main_params["TempFile"],"r")
         data = file.read().strip()
         data_list = data.split("\n")
         storage_dict = {}
@@ -49,17 +49,23 @@ def generate_plot(time_length, time_reference):
         dict_split = storage_dict.items()
         dict_split = sorted(dict_split)
         x,y = zip(*dict_split)
-        xtick_holder = np.linspace((time_reference-time_length).timestamp(),time_reference.timestamp(),7)
+        xtick_holder = np.linspace((time_reference-time_length).timestamp(),time_reference.timestamp(),8)
         xtick_holder = [datetime.datetime.fromtimestamp(each) for each in xtick_holder]
         plt.rcParams["figure.figsize"] = (10,5)
-        plt.plot(x,y,"bo-")
+        plt.plot(x,y,linestyle="solid",linewidth=1.0,color="blue")
+        plt.plot(x,y,marker="o",markerfacecolor="red",markersize=3)
         plt.plot(xtick_holder,[42 for each in xtick_holder],"r")
-        plt.xlabel("Timestamp")
+        plt.xlabel("Timestamp (24hr EST)",labelpad=12)
         plt.ylabel("Temperature (˚F)")
         plt.yticks(np.linspace(0,120,13))
         plt.xlim([xtick_holder[0],xtick_holder[-1]])
         plt.xticks(xtick_holder)
-        plt.savefig(os.path.join(os.path.abspath(os.path.dirname(__file__)),"static/graph.jpg"))
+        plt.grid(color="gray",linestyle="-", linewidth=0.5)
+        tick_counter = 0
+        for each in xtick_holder:
+            plt.annotate(each.strftime("%X"),xy=(tick_counter/7.0,-0.085),xycoords="axes fraction",horizontalalignment="center")
+            tick_counter += 1
+        plt.savefig(os.path.join(os.path.abspath(os.path.dirname(__file__)),"static/graph.jpg"),dpi=600)
         plt.clf()
 
 def read_time_arg(input_string):
@@ -166,7 +172,7 @@ def show_graph():
         if "EndDate" in arguments.keys():
             stop_point = parser.parse(arguments["EndDate"])
         generate_plot(oldest_point,stop_point)
-        holder = {"ImagePath":"static/graph.jpg"}
+        holder = {"ImagePath":"static/graph.jpg","Keys":preserve_arguments(arguments)}
         return render_template("graph.html",**holder)
     else:
         return redirect("/"+preserve_arguments(arguments,False))
