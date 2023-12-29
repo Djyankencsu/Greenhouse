@@ -37,17 +37,12 @@ def read_params():
 
 def generate_plot(time_length, time_reference):
     if data_dir is not None:
-        file = open(data_dir +main_params["TempFile"],"r")
-        data = file.read().strip()
-        data_list = data.split("\n")
-        storage_dict = {}
-        for each in data_list:
-            holder = each.split(",")
-            time_holder = parser.parse(holder[0])
-            if ((time_reference - time_length) < time_holder) and (time_holder < time_reference):
-                storage_dict[time_holder] = float(holder[1])
-        dict_split = storage_dict.items()
-        dict_split = sorted(dict_split)
+        dict_holder = load_data_file(data_dir +main_params["TempFile"])
+        dict_split = []
+        for each in dict_holder:
+            if ((time_reference - time_length) < each[0]) and (each[0] < time_reference):
+                dict_split.append(each)
+        if len(dict_split) < 2: return "Insufficient Data from Time Period Given"
         x,y = zip(*dict_split)
         xtick_holder = np.linspace((time_reference-time_length).timestamp(),time_reference.timestamp(),8)
         xtick_holder = [datetime.datetime.fromtimestamp(each) for each in xtick_holder]
@@ -67,6 +62,20 @@ def generate_plot(time_length, time_reference):
             tick_counter += 1
         plt.savefig(os.path.join(os.path.abspath(os.path.dirname(__file__)),"static/graph.jpg"),dpi=600)
         plt.clf()
+        return 0
+
+def load_data_file(file_path):
+    file = open(file_path,"r")
+    data = file.read().strip()
+    data_list = data.split("\n")
+    storage_dict = {}
+    for each in data_list:
+        holder = each.split(",")
+        time_holder = parser.parse(holder[0])
+        storage_dict[time_holder] = float(holder[1])
+    dict_split = storage_dict.items()
+    dict_split = sorted(dict_split)
+    return dict_split
 
 def read_time_arg(input_string):
     holder_int = ""
@@ -85,15 +94,23 @@ def read_time_arg(input_string):
     elif holder_char == "w":
         return datetime.timedelta(weeks=holder_int)
     
-def preserve_arguments(arguments,keys=True):
+def preserve_arguments(arguments,keys=True,dict_ret=False,rem_graph=False):
     query = "?"
+    holder_dict = {}
     for each in arguments.keys():
         if (each in ["ReadKey","WriteKey"] and not keys):
             pass
+        elif (rem_graph and each in ["Time","EndDate"]):
+            pass
+        elif dict_ret:
+            holder_dict[each] = arguments[each]
         else:
             query += each + "=" + arguments[each]+"&"
     query = query[0:-1]
-    return query
+    if not dict_ret:
+        return query
+    else:
+        return holder_dict
 
 app = Flask(__name__)
 
@@ -145,7 +162,13 @@ def write_data():
         else:
             return render_template("writefail.html")
     else:
-        return redirect("/"+preserve_arguments(arguments,False))
+        return redirect("/"+preserve_arguments(arguments))
+
+@app.route("/now")
+def current_cond():
+    arguments = request.args.to_dict()
+    data_list = load_data_file(data_dir +main_params["TempFile"])
+    return render_template("current.html",TimeStamp=data_list[-1][0].strftime("%a %b %-d-%X").split("-"),Temperature=data_list[-1][1])
 
 @app.route("/image")
 def show_img():
@@ -154,10 +177,13 @@ def show_img():
     if arguments["ReadKey"] == main_params["ReadKey"]:
         image_name = str(counter).zfill(int(main_params["ImgNameLength"]))+".jpg"
         image_path=data_dir+"images/"+image_name
-        shutil.copy(image_path,(os.path.dirname(os.path.abspath(__file__))+"/static/image.jpg"))
-        holder = {"ImagePath":"static/image.jpg"}
-        counter += 1
-        return render_template("image.html",**holder)
+        if os.path.exists(image_path):
+            shutil.copy(image_path,(os.path.dirname(os.path.abspath(__file__))+"/static/image.jpg"))
+            holder = {"ImagePath":"static/image.jpg"}
+            counter += 1
+            return render_template("image.html",**holder)
+        else:
+            return render_template("error.html",Err_Desc="Image Path Does not Exist",Keys=preserve_arguments(arguments))
     else:
         return redirect("/"+preserve_arguments(arguments,False))
     
@@ -171,9 +197,13 @@ def show_graph():
             oldest_point = read_time_arg(arguments["Time"])
         if "EndDate" in arguments.keys():
             stop_point = parser.parse(arguments["EndDate"])
-        generate_plot(oldest_point,stop_point)
-        holder = {"ImagePath":"static/graph.jpg","Keys":preserve_arguments(arguments)}
-        return render_template("graph.html",**holder)
+        success = generate_plot(oldest_point,stop_point)
+        if success == 0:
+            holder = {"ImagePath":"static/graph.jpg","Keys":preserve_arguments(arguments)}
+            return render_template("graph.html",**holder, KeyDict=preserve_arguments(arguments,dict_ret=True,rem_graph=True))
+        else:
+            holder = {"Err_Desc":success,"Keys":preserve_arguments(arguments)}
+            return render_template("error.html",**holder)
     else:
         return redirect("/"+preserve_arguments(arguments,False))
 

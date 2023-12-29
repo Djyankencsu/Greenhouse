@@ -19,4 +19,16 @@
         <img src="{{ImagePath}}" style="max-width: 100%; height: auto; transform:scale()">
         <p style="text-align: center; color:red;">*Red line is danger zone for frost: 42˚F</p>
     </div>
+    <div style="width: fit-content; align-items: center;">
+        <form style="align-items: center;" method="get" action="/graph" autocomplete="off">
+            <div style="display: inline">
+                <h4>Enter a Time Code</h4>
+                {% for Key, Value in KeyDict.items() %}
+                <input type="hidden" name="{{Key}}" value="{{ Value }}">
+                {% endfor %}
+                <input type="text" name="Time">
+                <input type="submit">
+            </div>
+        </form>
+    </div>
 </body>
