@@ -50,16 +50,18 @@ read_params()
 
 def panic(temp = None,time = None):
     client = Client(main_params.get("AccountSID"), main_params.get("AuthToken"))
-    if temp is not None:
+    if time is not None and temp is not None:
+        payload = "<Response><Say>Alert! It has been " + str(time) + " minutes since last update, and last recorded temperature was "+ voice_formatter(temp) +".</Say></Response>"
+    elif temp is not None:
         payload = "<Response><Say>Alert! Current temperature is " + voice_formatter(temp) + "</Say></Response>"
     elif time is not None:
-        payload = "<Response><Say>Alert! It has been " + time + " minutes since last update, and temp was less than 50 degrees.</Say></Response>"
+        payload = "<Response><Say>Alert! It has been " + str(time) + " minutes since last update, and temperature was less than 50 degrees.</Say></Response>"
     call = client.calls.create(
                             twiml=payload,
                             to='+19196077727',
                             from_='+17865634668'
                         )
-    print(call.sid)
+    print("Made emergency call:",call.sid)
 
 
 next_check = datetime.datetime.now()
@@ -72,7 +74,7 @@ while True:
             next_check = timestamp + datetime.timedelta(minutes=5)
         elif (timenow - timestamp) > datetime.timedelta(minutes = 4):
             if temperature < 50.0:
-                panic(time = (timenow - timestamp).minutes)
+                panic(temp = temperature, time = int((timenow - timestamp).seconds / 60.0))
                 next_check = timenow + datetime.timedelta(minutes=5)
                 alerted = True
         if temperature < 42.0 and not alerted:
