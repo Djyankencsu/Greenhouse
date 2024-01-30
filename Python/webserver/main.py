@@ -100,7 +100,7 @@ def preserve_arguments(arguments,keys=True,dict_ret=False,rem_graph=False):
     for each in arguments.keys():
         if (each in ["ReadKey","WriteKey"] and not keys):
             pass
-        elif (rem_graph and each in ["Time","EndDate"]):
+        elif (rem_graph and (each in ["Time","EndDate"])):
             pass
         elif dict_ret:
             holder_dict[each] = arguments[each]
@@ -199,8 +199,8 @@ def show_graph():
             stop_point = parser.parse(arguments["EndDate"])
         success = generate_plot(oldest_point,stop_point)
         if success == 0:
-            holder = {"ImagePath":"static/graph.jpg","Keys":preserve_arguments(arguments)}
-            return render_template("graph.html",**holder, KeyDict=preserve_arguments(arguments,dict_ret=True,rem_graph=True))
+            holder = {"ImagePath":"static/graph.jpg","Keys":preserve_arguments(arguments,rem_graph=True)}
+            return render_template("graph.html",**holder, KeyDict=preserve_arguments(arguments,dict_ret=True))
         else:
             holder = {"Err_Desc":success,"Keys":preserve_arguments(arguments)}
             return render_template("error.html",**holder)

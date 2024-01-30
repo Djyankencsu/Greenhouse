@@ -22,11 +22,21 @@
     <div style="width: fit-content; align-items: center;">
         <form style="align-items: center;" method="get" action="/graph" autocomplete="off">
             <div style="display: inline">
-                <h4>Enter a Time Code</h4>
+                <h4>Enter a Time Code for the Length of Time Period to Graph</h4>
                 {% for Key, Value in KeyDict.items() %}
                 <input type="hidden" name="{{Key}}" value="{{ Value }}">
                 {% endfor %}
                 <input type="text" name="Time">
+                <input type="submit">
+            </div>
+        </form>
+        <form>
+            <div style="display: inline;">
+                <h4>Enter an End Date</h4>
+                {% for Key, Value in KeyDict.items() %}
+                <input type="hidden" name="{{Key}}" value="{{ Value }}">
+                {% endfor %}
+                <input type="datetime-local" name="EndDate">
                 <input type="submit">
             </div>
         </form>
